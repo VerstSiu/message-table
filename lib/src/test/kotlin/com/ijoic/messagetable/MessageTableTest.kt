@@ -62,7 +62,7 @@ class MessageTableTest {
   }
 
   data class User(
-    val name: String,
+    @get:PrintColumn("NAME") val name: String,
     val age: Int,
     val salary: Int? = null
   )

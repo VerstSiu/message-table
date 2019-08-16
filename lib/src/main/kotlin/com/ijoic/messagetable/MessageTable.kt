@@ -117,10 +117,36 @@ class MessageTable<DATA: Any>(
     }
     val fields = item::class.java.declaredFields
     val infoItems =  fields.mapNotNull { field ->
-      getFieldReader(field, item)?.let { ColumnInfo(field.name, !isPrimitiveType(field.type), it) }
+      getFieldReader(field, item)?.let { ColumnInfo(getDisplayFieldName(field, item), !isPrimitiveType(field.type), it) }
     }
     defaultInfoItems = infoItems
     return infoItems
+  }
+
+  private fun getDisplayFieldName(field: Field, item: DATA): String {
+    // try access field value directly
+    val annFieldName = field.getAnnotation(PrintColumn::class.java)?.name
+
+    if (!annFieldName.isNullOrEmpty()) {
+      return annFieldName
+    }
+
+    // try access field value with get method
+    try {
+      val fieldMethod = item::class.java.getDeclaredMethod("get${field.name.capitalize()}")
+
+      if (fieldMethod != null) {
+        val annMethodFiledName = fieldMethod.getAnnotation(PrintColumn::class.java)?.name
+
+        if (!annMethodFiledName.isNullOrEmpty()) {
+          return annMethodFiledName
+        }
+      }
+
+    } catch (e: Exception) {
+      // ignore check error
+    }
+    return field.name
   }
 
   private fun getFieldReader(field: Field, item: DATA): ((DATA) -> String?)? {
