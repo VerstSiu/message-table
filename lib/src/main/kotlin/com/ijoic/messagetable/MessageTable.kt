@@ -117,18 +117,25 @@ class MessageTable<DATA: Any>(
     }
     val fields = item::class.java.declaredFields
     val infoItems =  fields.mapNotNull { field ->
-      getFieldReader(field, item)?.let { ColumnInfo(getDisplayFieldName(field, item), !isPrimitiveType(field.type), it) }
+      val ann = getColumnAnnotation(field, item)
+      getFieldReader(field, item)?.let {
+        ColumnInfo(
+          getDisplayName(ann, field),
+          getAlignLeftStatus(ann, field),
+          it
+        )
+      }
     }
     defaultInfoItems = infoItems
     return infoItems
   }
 
-  private fun getDisplayFieldName(field: Field, item: DATA): String {
+  private fun getColumnAnnotation(field: Field, item: DATA): PrintColumn? {
     // try access field value directly
-    val annFieldName = field.getAnnotation(PrintColumn::class.java)?.name
+    val annField = field.getAnnotation(PrintColumn::class.java)
 
-    if (!annFieldName.isNullOrEmpty()) {
-      return annFieldName
+    if (annField != null) {
+      return annField
     }
 
     // try access field value with get method
@@ -136,17 +143,37 @@ class MessageTable<DATA: Any>(
       val fieldMethod = item::class.java.getDeclaredMethod("get${field.name.capitalize()}")
 
       if (fieldMethod != null) {
-        val annMethodFiledName = fieldMethod.getAnnotation(PrintColumn::class.java)?.name
+        val annMethod = fieldMethod.getAnnotation(PrintColumn::class.java)
 
-        if (!annMethodFiledName.isNullOrEmpty()) {
-          return annMethodFiledName
+        if (annMethod != null) {
+          return annMethod
         }
       }
 
     } catch (e: Exception) {
       // ignore check error
     }
+    return null
+  }
+
+  private fun getDisplayName(ann: PrintColumn?, field: Field): String {
+    if (ann != null) {
+      when {
+        ann.hideName -> return ""
+        ann.name.isNotEmpty() -> return ann.name
+      }
+    }
     return field.name
+  }
+
+  private fun getAlignLeftStatus(ann: PrintColumn?, field: Field): Boolean {
+    if (ann != null) {
+      when {
+        ann.alignLeft -> return true
+        ann.alignRight -> return false
+      }
+    }
+    return !isPrimitiveType(field.type)
   }
 
   private fun getFieldReader(field: Field, item: DATA): ((DATA) -> String?)? {

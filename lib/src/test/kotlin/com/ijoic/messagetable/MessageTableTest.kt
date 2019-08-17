@@ -63,7 +63,7 @@ class MessageTableTest {
 
   data class User(
     @get:PrintColumn("NAME") val name: String,
-    val age: Int,
-    val salary: Int? = null
+    @get:PrintColumn(hideName = true) val age: Int,
+    @get:PrintColumn(alignLeft = true) val salary: Int? = null
   )
 }

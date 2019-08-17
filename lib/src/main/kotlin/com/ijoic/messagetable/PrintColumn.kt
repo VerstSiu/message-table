@@ -23,5 +23,8 @@ package com.ijoic.messagetable
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.PROPERTY_GETTER)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class PrintColumn(
-  val name: String
+  val name: String = "",
+  val alignLeft: Boolean = false,
+  val alignRight: Boolean = false,
+  val hideName: Boolean = false
 )
