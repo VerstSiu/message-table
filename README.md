@@ -1,6 +1,8 @@
 
 # Message Table
 
+[![](https://jitpack.io/v/VerstSiu/message-table.svg)](https://jitpack.io/#VerstSiu/message-table)
+
 ## Get Start
 
 * Add it in your root build.gradle at the end of repositories:
@@ -18,6 +20,7 @@
 
     ```gradle
     dependencies {
+        implementation 'com.github.VerstSiu:message-table:1.0'
     }
     ```
 
