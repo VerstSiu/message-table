@@ -49,8 +49,16 @@ class MessageTable<DATA: Any>(
    * Print table contents
    */
   fun print(manager: PrintManager = DefaultPrintManager) {
+    val contents = calcPrintContents(manager) ?: return
+    contents.forEach { manager.printLine(it) }
+  }
+
+  /**
+   * Returns calculate result of print contents
+   */
+  fun calcPrintContents(manager: PrintManager = DefaultPrintManager): List<String>? {
     val items = this.dataItems.toList()
-    val firstItem = items.firstOrNull() ?: return
+    val firstItem = items.firstOrNull() ?: return null
     val infoItems = getInfoItems(firstItem)
     val columns = infoItems.map { MessageColumn(it) }
 
@@ -66,22 +74,27 @@ class MessageTable<DATA: Any>(
         column.columnWidth = max(columnWith, column.columnWidth)
       }
     }
+    val printContents = mutableListOf<String>()
 
     // print title
-    manager.onPrintTableTitle(
+    val title = manager.genTableTitle(
       columns.map {
         fillSpace(it.info.name.capitalize(), it.columnWidth, it.info.isAlignLeft)
       }
     )
+    printContents.add(title)
 
     // print columns
     for (i in 0 until items.size) {
-      manager.onPrintTableContent(
+      val content = manager.genTableContent(
         columns.map {
           fillSpace(it.values[i], it.columnWidth, it.info.isAlignLeft)
         }
       )
+      printContents.add(content)
     }
+
+    return printContents.takeIf { it.isNotEmpty() }
   }
 
   private fun fillSpace(value: String, spaceWith: Int, isAlignLeft: Boolean) = when {
@@ -212,24 +225,29 @@ class MessageTable<DATA: Any>(
     /**
      * Print table title with [columns]
      */
-    fun onPrintTableTitle(columns: List<String>)
+    fun genTableTitle(columns: List<String>): String {
+      return columns.joinToString(" \t")
+    }
 
     /**
-     * Print table conent with [columns]
+     * Print table content with [columns]
      */
-    fun onPrintTableContent(columns: List<String>)
+    fun genTableContent(columns: List<String>): String {
+      return columns.joinToString(" \t")
+    }
+
+    /**
+     * Print [line]
+     */
+    fun printLine(line: String)
   }
 
   /**
    * Default print manager
    */
   private object DefaultPrintManager: PrintManager {
-    override fun onPrintTableTitle(columns: List<String>) {
-      println(columns.joinToString(" \t"))
-    }
-
-    override fun onPrintTableContent(columns: List<String>) {
-      println(columns.joinToString(" \t"))
+    override fun printLine(line: String) {
+      println(line)
     }
   }
 
